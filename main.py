@@ -37,22 +37,24 @@ while True:
     # Threshold the image to get only green objects
     mask_green = cv2.inRange(hsv, lower_green, upper_green)
 
-    # Find contours for black objects
-    contours, _ = cv2.findContours(mask_black, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    for contour in contours:
-        area = cv2.contourArea(contour)
-        if area > 5000:  # Adjust this value according to your requirement
-            x, y, w, h = cv2.boundingRect(contour)
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
-
     # Find contours for green objects
-    contours, _ = cv2.findContours(mask_green, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    for contour in contours:
-        area = cv2.contourArea(contour)
-        if area > 10:  # Adjust this value according to your requirement
-            x, y, w, h = cv2.boundingRect(contour)
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            cv2.circle(frame, (int(x + w / 2), int(y + h / 2)), 3, (0, 255, 0), -1)
+    contours_green, _ = cv2.findContours(mask_green, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Find contours for black objects
+    contours_black, _ = cv2.findContours(mask_black, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Draw green squares and check if they are inside black rectangles
+    for contour_green in contours_green:
+        area_green = cv2.contourArea(contour_green)
+        if area_green > 10:  # Adjust this value according to your requirement
+            x_green, y_green, w_green, h_green = cv2.boundingRect(contour_green)
+            cv2.rectangle(frame, (x_green, y_green), (x_green + w_green, y_green + h_green), (0, 255, 0), 2)
+            for contour_black in contours_black:
+                area_black = cv2.contourArea(contour_black)
+                if area_black > 5000:  # Adjust this value according to your requirement
+                    x_black, y_black, w_black, h_black = cv2.boundingRect(contour_black)
+                    if x_black < x_green < x_black + w_black and y_black < y_green < y_black + h_black:
+                        cv2.rectangle(frame, (x_black, y_black), (x_black + w_black, y_black + h_black), (0, 0, 255), 2)
 
     # Display the resulting frame
     cv2.imshow('Object Tracking', frame)

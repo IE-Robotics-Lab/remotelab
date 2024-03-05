@@ -8,14 +8,14 @@ def mouse_callback(event, x, y, flags, params):
         b, g, r = frame[y, x]
         # Display RGB values and coordinates
         text = f"RGB: ({r}, {g}, {b})  Coordinates: ({x}, {y})"
-        print(text)
+        cv2.putText(frame, text, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
 
 # Initialize the camera
 cap = cv2.VideoCapture(0)
 
 # Define the lower and upper bounds for the black box and green dot
 lower_black = np.array([0, 0, 0])
-upper_black = np.array([70, 70, 70])
+upper_black = np.array([120, 120, 120])
 lower_green = np.array([40, 100, 40])
 upper_green = np.array([100, 255, 180])
 
@@ -32,7 +32,7 @@ while True:
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
     # Threshold the image to get only black objects
-    mask_black = cv2.inRange(hsv, lower_black, upper_black)
+    mask_black = cv2.inRange(frame, lower_black, upper_black)
 
     # Threshold the image to get only green objects
     mask_green = cv2.inRange(hsv, lower_green, upper_green)
@@ -41,7 +41,7 @@ while True:
     contours, _ = cv2.findContours(mask_black, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for contour in contours:
         area = cv2.contourArea(contour)
-        if area > 1000:  # Adjust this value according to your requirement
+        if area > 5000:  # Adjust this value according to your requirement
             x, y, w, h = cv2.boundingRect(contour)
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
 

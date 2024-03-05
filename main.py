@@ -8,7 +8,7 @@ def mouse_callback(event, x, y, flags, params):
         b, g, r = frame[y, x]
         # Display RGB values and coordinates
         text = f"RGB: ({r}, {g}, {b})  Coordinates: ({x}, {y})"
-        cv2.putText(frame, text, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+        print(text)
 
 # Initialize the camera
 cap = cv2.VideoCapture(0)

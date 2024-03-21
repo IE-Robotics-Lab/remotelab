@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Put script in its own process group
-set -m
-
 # Start roscore
 roscore &
 ROSCORE_PID=$!
@@ -16,7 +13,7 @@ echo "AVT Vimba camera node launched"
 sleep 5 # Wait a bit to ensure the camera node has started
 
 # Start the rosbridge server
-roslaunch rosbridge_server rosbridge_websocket.launch &
+roslaunch rosbridge_server rosbridge_websocket.launch port:=9092 &
 ROSBRIDGE_PID=$!
 echo "Rosbridge server launched"
 sleep 5 # Wait a bit to ensure the rosbridge server has started
@@ -26,17 +23,32 @@ rosrun web_video_server web_video_server &
 WEB_VIDEO_SERVER_PID=$!
 echo "Web video server started with PID: $WEB_VIDEO_SERVER_PID"
 
-echo "All services started. Press Ctrl+C to exit and stop all services."
+echo "All services started. Type 'stop' to exit and stop all services."
 
 # Function to kill all started services
 cleanup() {
     echo "Stopping all services..."
-    kill -9 $ROSCORE_PID $CAMERA_PID $ROSBRIDGE_PID $WEB_VIDEO_SERVER_PID
+
+    # Kill processes by PID
+    kill -9 $ROSCORE_PID $CAMERA_PID $WEB_VIDEO_SERVER_PID
+
+    # Specifically find and kill rosbridge_server listening on port 9090
+    ROSBRIDGE_PID=$(lsof -ti:9092)
+    if [[ ! -z $ROSBRIDGE_PID ]]; then
+        echo "Killing rosbridge_server on port 9090 with PID $ROSBRIDGE_PID"
+        kill -9 $ROSBRIDGE_PID
+    fi
+
+    echo "All services stopped."
     exit 0
 }
 
-# Trap Ctrl+C (SIGINT) and call cleanup function
-trap cleanup SIGINT
 
-# Wait indefinitely until a signal is received
-wait
+# Loop waiting for the user to type 'stop'
+while : ; do
+    read -r -p "Enter command: " cmd
+    if [[ $cmd == "stop" ]]; then
+        cleanup
+        break
+    fi
+done

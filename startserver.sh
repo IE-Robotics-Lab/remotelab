@@ -1,25 +1,30 @@
 #!/bin/bash
 
-# Start roscore in the background
+# Start roscore
 roscore &
 ROSCORE_PID=$!
-echo "Started roscore with PID $ROSCORE_PID"
+echo "roscore started with PID: $ROSCORE_PID"
+sleep 5 # Wait a bit to ensure roscore is fully up
 
-# Wait a bit to ensure roscore is up
-sleep 5
+# Start the AVT Vimba camera node
+(roslaunch avt_vimba_camera mono_camera.launch ip:="10.205.3.35") &
+echo "AVT Vimba camera node launched"
+sleep 5 # Wait a bit to ensure the camera node has started
 
-# Start the camera node
-roslaunch avt_vimba_camera mono_camera.launch ip:="10.205.3.35" &
-echo "Started camera node"
+# Start the rosbridge server
+(roslaunch rosbridge_server rosbridge_websocket.launch) &
+echo "Rosbridge server launched"
+sleep 5 # Wait a bit to ensure the rosbridge server has started
 
-# Start rosbridge_server
-roslaunch rosbridge_server rosbridge_websocket.launch &
-echo "Started rosbridge_server"
-
-# Start web_video_server
+# Start the web video server
 rosrun web_video_server web_video_server &
-echo "Started web_video_server"
+WEB_VIDEO_SERVER_PID=$!
+echo "Web video server started with PID: $WEB_VIDEO_SERVER_PID"
 
-# Optionally, wait for any command to finish, then kill the others
-wait -n
-kill 0
+echo "All services started. Press Ctrl+C to exit and stop all services."
+
+# Trap Ctrl+C (SIGINT) so we can clean up properly
+trap "kill $ROSCORE_PID $WEB_VIDEO_SERVER_PID; exit" SIGINT
+
+# Wait indefinitely until a signal is received
+wait
